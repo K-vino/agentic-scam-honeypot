@@ -5,6 +5,7 @@ Backend REST API that detects scam messages, engages scammers using an autonomou
 ## Features
 
 - **API Key Authentication**: Secure endpoints with API key-based authentication
+- **Hackathon-Compliant API**: Primary `/api/honeypot` endpoint returns only `{"status": "success", "reply": "string"}`
 - **Session Management**: Track conversations with unique session IDs (in-memory, no database)
 - **Scam Detection**: Rule-based detection for multiple scam types:
   - Financial fraud
@@ -21,7 +22,7 @@ Backend REST API that detects scam messages, engages scammers using an autonomou
   - URLs
   - Bank account details
   - Email addresses
-- **Callback System**: Structured callbacks when engagement completes
+- **Mandatory Final Callback**: Automatic callback to hackathon endpoint when engagement completes
 
 ## Installation
 
@@ -47,9 +48,11 @@ cp .env.example .env
 Edit `.env` file to configure:
 
 - `API_KEY`: Your secret API key for authentication
-- `CALLBACK_URL`: (Optional) URL to receive callbacks when sessions complete
 - `MAX_MESSAGES_PER_SESSION`: Maximum messages before session terminates (default: 20)
+- `MIN_MESSAGES_FOR_CALLBACK`: Minimum messages before sending callback (default: 3)
 - `SESSION_TIMEOUT_SECONDS`: Session timeout in seconds (default: 3600)
+
+**Note**: The callback URL is hardcoded to the hackathon endpoint: `https://hackathon.guvi.in/api/updateHoneyPotFinalResult`
 
 ## Usage
 
@@ -73,9 +76,40 @@ Interactive API documentation is available at:
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
-### Example Request
+### Primary Hackathon Endpoint
 
-Send a scam message:
+**POST /api/honeypot** (For hackathon evaluation)
+
+Send a scam message and receive a human-like reply:
+
+```bash
+curl -X POST "http://localhost:8000/api/honeypot" \
+  -H "X-API-Key: your-secret-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "session-123",
+    "message": "Congratulations! You have won a prize of Rs 50,000. Send your UPI ID to claim.",
+    "conversationHistory": [],
+    "metadata": {}
+  }'
+```
+
+Response (ONLY these fields):
+
+```json
+{
+  "status": "success",
+  "reply": "Really? I won something? That's amazing!"
+}
+```
+
+**Intelligence and scam detection remain INTERNAL** and are never exposed in the API response. When a session completes with detected scam activity, a callback is automatically sent to the hackathon endpoint with extracted intelligence.
+
+### Legacy Testing Endpoint
+
+**POST /api/v1/message** (For internal testing only - NOT for hackathon evaluation)
+
+This endpoint returns detailed scam detection and intelligence data for debugging purposes:
 
 ```bash
 curl -X POST "http://localhost:8000/api/v1/message" \
@@ -143,12 +177,12 @@ app/
 ## Session Lifecycle
 
 1. **Message Receipt**: API receives a message with a sessionId
-2. **Scam Detection**: Rule-based analysis detects scam intent
-3. **Intelligence Extraction**: Extracts UPI IDs, phone numbers, URLs, etc.
+2. **Scam Detection**: Rule-based analysis detects scam intent (internal only)
+3. **Intelligence Extraction**: Extracts UPI IDs, phone numbers, URLs, etc. (internal only)
 4. **Reply Generation**: Generates contextual human-like reply
 5. **Session Update**: Updates session state and history
 6. **Termination Check**: Checks if session should end (max messages, timeout)
-7. **Callback**: Sends structured callback when engagement completes
+7. **Final Callback**: When session ends with scam detected, sends callback to hackathon endpoint with intelligence
 
 ## Session Termination
 
@@ -157,12 +191,27 @@ Sessions terminate when:
 - Session timeout (default: 1 hour of inactivity)
 - Manually terminated
 
-Upon termination, a callback is sent (if configured) with:
-- Complete conversation history
-- Detected scam intents
-- Confidence scores
-- Extracted intelligence
-- Session metadata
+Upon termination, if scam was detected and minimum engagement threshold met (default: 3 messages), a callback is sent to:
+```
+https://hackathon.guvi.in/api/updateHoneyPotFinalResult
+```
+
+Callback payload:
+```json
+{
+  "sessionId": "session-123",
+  "scamDetected": true,
+  "totalMessagesExchanged": 15,
+  "extractedIntelligence": {
+    "bankAccounts": [],
+    "upiIds": ["scammer@paytm"],
+    "phishingLinks": ["http://fake-site.com"],
+    "phoneNumbers": ["9876543210"],
+    "suspiciousKeywords": ["urgent", "prize", "won"]
+  },
+  "agentNotes": "Detected fake_prize, upi_scam attempt. Engaged for 15 messages. Extracted 3 intelligence items."
+}
+```
 
 ## Security
 
