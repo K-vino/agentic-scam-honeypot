@@ -12,10 +12,17 @@ class MessageEvent(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
+class MessageContent(BaseModel):
+    """Message content structure for hackathon format"""
+    sender: str = Field(..., description="Message sender (e.g., 'scammer')")
+    text: str = Field(..., description="Message text content")
+    timestamp: str = Field(..., description="ISO-8601 timestamp")
+
+
 class HackathonRequest(BaseModel):
     """Hackathon API request format"""
     sessionId: str = Field(..., description="Unique session identifier")
-    message: str = Field(..., description="Message content from potential scammer")
+    message: MessageContent = Field(..., description="Message object with sender, text, timestamp")
     conversationHistory: Optional[List[Dict[str, str]]] = Field(default_factory=list)
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 

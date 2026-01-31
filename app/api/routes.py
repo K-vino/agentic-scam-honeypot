@@ -40,10 +40,10 @@ async def hackathon_honeypot(
     session = session_manager.get_or_create_session(request.sessionId)
     
     # Add incoming message to history
-    session.add_message("scammer", request.message)
+    session.add_message("scammer", request.message.text)
     
     # Detect scam intent (internal only)
-    is_scam, scam_intents, confidence = scam_detector.detect(request.message)
+    is_scam, scam_intents, confidence = scam_detector.detect(request.message.text)
     
     # Update session with detection results (internal only)
     for intent in scam_intents:
@@ -51,7 +51,7 @@ async def hackathon_honeypot(
     session.add_confidence_score(confidence)
     
     # Extract intelligence (internal only)
-    intel_report = intelligence_extractor.extract(request.message)
+    intel_report = intelligence_extractor.extract(request.message.text)
     
     # Merge with existing intelligence (internal only)
     session.intelligence.upiIds.extend(intel_report.upiIds)
@@ -86,7 +86,7 @@ async def hackathon_honeypot(
         # Note: message_count includes both scammer and agent messages
         # Subtract 1 to get count of previous agent responses for reply generation
         reply = reply_generator.generate_reply(
-            request.message,
+            request.message.text,
             session.scam_intents,
             session.message_count - 1
         )

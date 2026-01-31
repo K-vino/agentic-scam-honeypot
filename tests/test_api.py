@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.config import settings
+from tests.utils.helpers import create_hackathon_message
 
 client = TestClient(app)
 
@@ -32,7 +33,7 @@ def test_hackathon_endpoint_without_api_key():
         "/api/honeypot",
         json={
             "sessionId": "test-session",
-            "message": "Hello"
+            "message": create_hackathon_message("Hello")
         }
     )
     
@@ -46,7 +47,7 @@ def test_hackathon_endpoint_with_invalid_api_key():
         headers={"X-API-Key": "invalid-key"},
         json={
             "sessionId": "test-session",
-            "message": "Hello"
+            "message": create_hackathon_message("Hello")
         }
     )
     
@@ -60,9 +61,13 @@ def test_hackathon_endpoint_success():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": "test-hackathon-session",
-            "message": "You won a prize! Send UPI to claim@paytm",
+            "message": create_hackathon_message("You won a prize! Send UPI to claim@paytm"),
             "conversationHistory": [],
-            "metadata": {}
+            "metadata": {
+                "channel": "SMS",
+                "language": "English",
+                "locale": "IN"
+            }
         }
     )
     
@@ -91,7 +96,7 @@ def test_hackathon_endpoint_scam_message():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": "test-scam-hackathon",
-            "message": "URGENT! Your bank account has been suspended. Verify your account details immediately"
+            "message": create_hackathon_message("URGENT! Your bank account has been suspended. Verify your account details immediately")
         }
     )
     
@@ -232,7 +237,7 @@ def test_hackathon_session_continuation():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": "Hello, you won a prize!"
+            "message": create_hackathon_message("Hello, you won a prize!")
         }
     )
     
@@ -247,7 +252,7 @@ def test_hackathon_session_continuation():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": "Send your UPI ID to claim"
+            "message": create_hackathon_message("Send your UPI ID to claim")
         }
     )
     

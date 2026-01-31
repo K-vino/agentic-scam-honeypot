@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.config import settings
 from app.services.session_manager import session_manager
+from tests.utils.helpers import create_hackathon_message
 
 client = TestClient(app)
 
@@ -31,9 +32,13 @@ def test_hackathon_complete_flow():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": "Congratulations! You won Rs 50,000! Send your UPI to winner@paytm to claim.",
+            "message": create_hackathon_message("Congratulations! You won Rs 50,000! Send your UPI to winner@paytm to claim."),
             "conversationHistory": [],
-            "metadata": {}
+            "metadata": {
+                "channel": "SMS",
+                "language": "English",
+                "locale": "IN"
+            }
         }
     )
     
@@ -52,9 +57,13 @@ def test_hackathon_complete_flow():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": "Yes, you won! Send to winner@paytm or call 9876543210 urgently!",
+            "message": create_hackathon_message("Yes, you won! Send to winner@paytm or call 9876543210 urgently!"),
             "conversationHistory": [],
-            "metadata": {}
+            "metadata": {
+                "channel": "SMS",
+                "language": "English",
+                "locale": "IN"
+            }
         }
     )
     
@@ -69,9 +78,13 @@ def test_hackathon_complete_flow():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": "Click http://fake-prize.com to verify. Account: 123456789012",
+            "message": create_hackathon_message("Click http://fake-prize.com to verify. Account: 123456789012"),
             "conversationHistory": [],
-            "metadata": {}
+            "metadata": {
+                "channel": "SMS",
+                "language": "English",
+                "locale": "IN"
+            }
         }
     )
     
@@ -101,9 +114,14 @@ def test_hackathon_response_format_strict():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": "URGENT! Bank account suspended! Click http://phishing.com",
+            "message": create_hackathon_message("URGENT! Bank account suspended! Click http://phishing.com"),
             "conversationHistory": [],
-            "metadata": {"test": "value"}
+            "metadata": {
+                "channel": "SMS",
+                "language": "English",
+                "locale": "IN",
+                "test": "value"
+            }
         }
     )
     
@@ -147,7 +165,7 @@ def test_callback_conditions():
             headers={"X-API-Key": settings.api_key},
             json={
                 "sessionId": session_id,
-                "message": f"Message {i}: Send to scammer@paytm call 9999999999",
+                "message": create_hackathon_message(f"Message {i}: Send to scammer@paytm call 9999999999"),
             }
         )
         assert response.status_code == 200
@@ -171,7 +189,7 @@ def test_no_intelligence_leak():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id,
-            "message": (
+            "message": create_hackathon_message(
                 "Send payment to hacker@paytm or hacker2@ybl. "
                 "Call 9876543210 or 9123456789. "
                 "Visit http://phishing1.com and http://phishing2.com. "
@@ -209,7 +227,7 @@ def test_authentication_required():
         "/api/honeypot",
         json={
             "sessionId": "test",
-            "message": "test message"
+            "message": create_hackathon_message("test message")
         }
     )
     assert response.status_code == 401
@@ -220,7 +238,7 @@ def test_authentication_required():
         headers={"X-API-Key": "wrong-key"},
         json={
             "sessionId": "test",
-            "message": "test message"
+            "message": create_hackathon_message("test message")
         }
     )
     assert response.status_code == 401
@@ -241,7 +259,7 @@ def test_multiple_sessions_independent():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id_1,
-            "message": "Prize scam message with prize@paytm"
+            "message": create_hackathon_message("Prize scam message with prize@paytm")
         }
     )
     
@@ -250,7 +268,7 @@ def test_multiple_sessions_independent():
         headers={"X-API-Key": settings.api_key},
         json={
             "sessionId": session_id_2,
-            "message": "Job scam message with job@paytm"
+            "message": create_hackathon_message("Job scam message with job@paytm")
         }
     )
     
