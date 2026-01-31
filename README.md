@@ -58,6 +58,8 @@ Edit `.env` file to configure:
 
 ### Start the server
 
+**Local Development:**
+
 ```bash
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -68,7 +70,15 @@ Or using the main module:
 python -m app.main
 ```
 
+**Production (Render):**
+
+```bash
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
+```
+
 The API will be available at `http://localhost:8000`
+
+**Note**: The server automatically reads the `PORT` environment variable when available (required for Render deployment).
 
 ### API Documentation
 
@@ -103,7 +113,29 @@ Response (ONLY these fields):
 }
 ```
 
-**Intelligence and scam detection remain INTERNAL** and are never exposed in the API response. When a session completes with detected scam activity, a callback is automatically sent to the hackathon endpoint with extracted intelligence.
+**GUVI Tester Compatibility:**
+
+The endpoint also accepts empty POST requests (for compatibility with GUVI endpoint testers):
+
+```bash
+curl -X POST "http://localhost:8000/api/honeypot" \
+  -H "X-API-Key: your-secret-api-key-here"
+```
+
+Response for empty body:
+
+```json
+{
+  "status": "success",
+  "reply": "Hello. How can I help you?"
+}
+```
+
+**Important Notes:**
+- **422 errors are avoided intentionally** for GUVI tester compatibility
+- Empty POST bodies are accepted and return a default greeting
+- **Intelligence and scam detection remain INTERNAL** and are never exposed in the API response
+- When a session completes with detected scam activity, a callback is automatically sent to the hackathon endpoint with extracted intelligence
 
 ### Legacy Testing Endpoint
 
