@@ -5,24 +5,40 @@ Example script demonstrating the Agentic Scam Honeypot API
 import requests
 import json
 import time
+import os
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configuration
 API_URL = "http://localhost:8000"
-API_KEY = "default-api-key-change-me"
+API_KEY = os.getenv("API_KEY", "default-api-key-change-me")
 HEADERS = {
     "X-API-Key": API_KEY,
     "Content-Type": "application/json"
 }
 
 
-def send_message(session_id: str, message: str):
-    """Send a message to the honeypot API"""
+def send_message(session_id: str, message_text: str):
+    """Send a message to the honeypot API in hackathon format"""
     response = requests.post(
-        f"{API_URL}/api/v1/message",
+        f"{API_URL}/api/honeypot",
         headers=HEADERS,
         json={
             "sessionId": session_id,
-            "message": message
+            "message": {
+                "sender": "scammer",
+                "text": message_text,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            "conversationHistory": [],
+            "metadata": {
+                "channel": "SMS",
+                "language": "English",
+                "locale": "IN"
+            }
         }
     )
     return response.json()
@@ -31,26 +47,8 @@ def send_message(session_id: str, message: str):
 def print_response(response: dict):
     """Pretty print the API response"""
     print("\n" + "="*60)
-    print(f"Session ID: {response['sessionId']}")
+    print(f"Status: {response['status']}")
     print(f"Reply: {response['reply']}")
-    print(f"Scam Detected: {response['scamDetected']}")
-    print(f"Scam Intents: {', '.join(response['scamIntents'])}")
-    print(f"Confidence: {response['confidence']:.2f}")
-    print(f"Should Continue: {response['shouldContinue']}")
-    
-    intel = response['extractedIntelligence']
-    if any(intel.values()):
-        print("\nExtracted Intelligence:")
-        if intel['upiIds']:
-            print(f"  UPI IDs: {', '.join(intel['upiIds'])}")
-        if intel['phoneNumbers']:
-            print(f"  Phone Numbers: {', '.join(intel['phoneNumbers'])}")
-        if intel['urls']:
-            print(f"  URLs: {', '.join(intel['urls'])}")
-        if intel['bankDetails']:
-            print(f"  Bank Details: {', '.join(intel['bankDetails'])}")
-        if intel['emailAddresses']:
-            print(f"  Emails: {', '.join(intel['emailAddresses'])}")
     print("="*60)
 
 
