@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -8,7 +8,7 @@ class MessageEvent(BaseModel):
     """Incoming scam message event"""
     sessionId: str = Field(..., description="Unique session identifier")
     message: str = Field(..., description="Message content from potential scammer")
-    timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    timestamp: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 

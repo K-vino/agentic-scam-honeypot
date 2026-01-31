@@ -1,7 +1,7 @@
 import httpx
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.schemas import SessionSummary, CallbackRequest
 from app.core.config import settings
 from app.services.session_manager import Session
@@ -33,7 +33,7 @@ class CallbackService:
                 intelligence=session.intelligence,
                 conversationHistory=session.conversation_history,
                 engagementDuration=session.get_duration(),
-                completedAt=datetime.utcnow(),
+                completedAt=datetime.now(timezone.utc),
                 terminationReason=session.termination_reason or "completed"
             )
             

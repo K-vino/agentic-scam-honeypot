@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models.schemas import ScamIntent, IntelligenceReport
 from app.core.config import settings
 
@@ -9,8 +9,8 @@ class Session:
     
     def __init__(self, session_id: str):
         self.session_id = session_id
-        self.created_at = datetime.utcnow()
-        self.last_activity = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(timezone.utc)
         self.message_count = 0
         self.conversation_history: List[Dict[str, str]] = []
         self.scam_intents: List[ScamIntent] = []
@@ -24,10 +24,10 @@ class Session:
         self.conversation_history.append({
             "role": role,
             "content": content,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
         self.message_count += 1
-        self.last_activity = datetime.utcnow()
+        self.last_activity = datetime.now(timezone.utc)
     
     def add_scam_intent(self, intent: ScamIntent):
         """Add detected scam intent"""
@@ -46,12 +46,12 @@ class Session:
     
     def get_duration(self) -> float:
         """Get session duration in seconds"""
-        return (datetime.utcnow() - self.created_at).total_seconds()
+        return (datetime.now(timezone.utc) - self.created_at).total_seconds()
     
     def is_expired(self) -> bool:
         """Check if session has expired"""
         timeout = timedelta(seconds=settings.session_timeout_seconds)
-        return datetime.utcnow() - self.last_activity > timeout
+        return datetime.now(timezone.utc) - self.last_activity > timeout
     
     def should_terminate(self) -> tuple[bool, Optional[str]]:
         """Determine if session should terminate"""
