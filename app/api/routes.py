@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from app.models.schemas import MessageEvent, MessageResponse, ScamIntent, HackathonRequest, HackathonResponse
 from app.core.security import verify_api_key
 from app.services.session_manager import session_manager
@@ -16,8 +17,8 @@ router = APIRouter(prefix="/api", tags=["honeypot"])
 
 @router.post("/honeypot", response_model=HackathonResponse)
 async def hackathon_honeypot(
-    request: HackathonRequest,
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    request: Optional[HackathonRequest] = Body(None)
 ) -> HackathonResponse:
     """
     Primary hackathon submission endpoint
@@ -28,6 +29,8 @@ async def hackathon_honeypot(
     - conversationHistory: Previous conversation (optional)
     - metadata: Additional metadata (optional)
     
+    Can also accept empty POST body (for GUVI tester compatibility).
+    
     Returns ONLY:
     - status: "success"
     - reply: Generated reply string
@@ -35,6 +38,13 @@ async def hackathon_honeypot(
     Intelligence and scam detection remain INTERNAL.
     Final callback sent automatically when session completes.
     """
+    
+    # Handle empty POST body (GUVI tester compatibility)
+    if request is None:
+        return HackathonResponse(
+            status="success",
+            reply="Hello. How can I help you?"
+        )
     
     # Get or create session
     session = session_manager.get_or_create_session(request.sessionId)
