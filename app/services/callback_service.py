@@ -31,8 +31,8 @@ class CallbackService:
             logger.info(f"No scam detected for session {session.session_id}. Skipping callback.")
             return False
         
-        # Check if sufficient engagement (at least 3 messages exchanged)
-        if session.message_count < 3:
+        # Check if sufficient engagement
+        if session.message_count < settings.min_messages_for_callback:
             logger.info(f"Insufficient engagement for session {session.session_id}. Skipping callback.")
             return False
         
