@@ -14,7 +14,16 @@ load_dotenv()
 
 # Configuration
 API_URL = "http://localhost:8000"
-API_KEY = os.getenv("API_KEY", "default-api-key-change-me")
+
+# Load API key from environment - REQUIRED
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise ValueError(
+        "API_KEY environment variable is required. "
+        "Please create a .env file with API_KEY=your-key "
+        "or run: python generate_api_key.py"
+    )
+
 HEADERS = {
     "X-API-Key": API_KEY,
     "Content-Type": "application/json"
