@@ -10,7 +10,7 @@ def generate_api_key(length: int = 36) -> str:
     Generate a secure random API key in the format: sk_honeypot_live_xxxxxxxxxxxxxxxxx
     
     Args:
-        length: Length of the random suffix (default: 36 characters, making total ~55 chars)
+        length: Length of the random suffix (default: 36 characters, making total 53 chars)
     
     Returns:
         A secure random string with prefix sk_honeypot_live_ followed by random chars
@@ -25,7 +25,7 @@ def generate_api_key(length: int = 36) -> str:
 
 if __name__ == "__main__":
     # Generate API key with 36-character random suffix
-    # Total length will be ~55 characters (19 char prefix + 36 random)
+    # Total length will be 53 characters (17 char prefix + 36 random)
     api_key = generate_api_key(36)
     
     print(api_key)
