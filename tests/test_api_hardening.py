@@ -192,13 +192,18 @@ def test_honeypot_multiple_empty_requests():
 
 
 def test_honeypot_empty_json_object():
-    """Test POST with empty JSON object {}"""
+    """Test POST with empty JSON object {}
+    
+    Note: Empty JSON object {} is different from empty body.
+    Empty body is accepted, but {} is missing required fields (sessionId, message)
+    so it correctly returns 422 per Pydantic validation.
+    """
     response = client.post(
         "/api/honeypot",
         headers={"X-API-Key": settings.api_key},
         json={}
     )
     
-    # Should return 422 for empty object (missing required fields)
-    # This is expected behavior - we only handle completely empty body
-    assert response.status_code in [422, 200]
+    # Empty JSON object should return 422 (missing required fields)
+    # This is expected - we only handle completely empty/null body, not malformed JSON
+    assert response.status_code == 422
