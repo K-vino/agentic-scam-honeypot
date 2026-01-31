@@ -12,6 +12,14 @@ class MessageEvent(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
+class HackathonRequest(BaseModel):
+    """Hackathon API request format"""
+    sessionId: str = Field(..., description="Unique session identifier")
+    message: str = Field(..., description="Message content from potential scammer")
+    conversationHistory: Optional[List[Dict[str, str]]] = Field(default_factory=list)
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+
 class ScamIntent(str, Enum):
     """Types of scam intent detected"""
     FINANCIAL_FRAUD = "financial_fraud"
@@ -33,6 +41,12 @@ class MessageResponse(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     shouldContinue: bool
     extractedIntelligence: Dict[str, List[str]] = Field(default_factory=dict)
+
+
+class HackathonResponse(BaseModel):
+    """Hackathon API response format - ONLY these fields"""
+    status: str = "success"
+    reply: str
 
 
 class IntelligenceReport(BaseModel):
@@ -62,3 +76,12 @@ class CallbackRequest(BaseModel):
     sessionId: str
     summary: SessionSummary
     status: str = "completed"
+
+
+class HackathonCallbackPayload(BaseModel):
+    """Hackathon final callback payload format"""
+    sessionId: str
+    scamDetected: bool
+    totalMessagesExchanged: int
+    extractedIntelligence: Dict[str, List[str]]
+    agentNotes: str
