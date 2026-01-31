@@ -184,6 +184,48 @@ curl -X POST http://localhost:8000/api/message \
 
 ## Architecture
 
+```
+┌─────────────────┐
+│  Scam Message   │
+│  (via API)      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────┐
+│           FastAPI Backend (main.py)             │
+│  ┌───────────────────────────────────────────┐  │
+│  │  API Key Authentication                   │  │
+│  └───────────────────────────────────────────┘  │
+│                                                  │
+│  ┌──────────────┐  ┌──────────────┐            │
+│  │ Scam         │  │ Intelligence │            │
+│  │ Detector     │  │ Extractor    │            │
+│  │ (Rules)      │  │ (UPI, Phone, │            │
+│  │              │  │  URLs)       │            │
+│  └──────────────┘  └──────────────┘            │
+│                                                  │
+│  ┌──────────────┐  ┌──────────────┐            │
+│  │ Reply        │  │ Session      │            │
+│  │ Generator    │  │ Manager      │            │
+│  │ (Human-like) │  │ (In-memory)  │            │
+│  └──────────────┘  └──────────────┘            │
+└─────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────┐
+│  Response + Intelligence    │
+│  + Human-like Reply         │
+└─────────────────────────────┘
+         │
+         ▼ (When session ends)
+┌─────────────────────────────┐
+│  Callback with Full Report  │
+│  (to configured endpoint)   │
+└─────────────────────────────┘
+```
+
+### Components
+
 - **main.py**: FastAPI application with endpoints and authentication
 - **session_manager.py**: In-memory session management
 - **scam_detector.py**: Rule-based scam detection logic
