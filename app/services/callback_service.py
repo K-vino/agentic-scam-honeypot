@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from app.models.schemas import SessionSummary, CallbackRequest, HackathonCallbackPayload
 from app.core.config import settings
 from app.services.session_manager import Session
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class CallbackService:
             logger.error(f"Hackathon callback error for session {session.session_id}: {str(e)}")
             return False
     
-    def _extract_keywords(self, session: Session) -> list[str]:
+    def _extract_keywords(self, session: Session) -> List[str]:
         """Extract suspicious keywords from conversation"""
         keywords = []
         suspicious_terms = [

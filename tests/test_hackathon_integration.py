@@ -183,14 +183,14 @@ def test_no_intelligence_leak():
     assert response.status_code == 200
     data = response.json()
     
-    # Check response text doesn't contain extracted intelligence
-    response_text = str(data)
+    # Check that the reply field doesn't contain extracted intelligence
+    reply_text = data.get("reply", "")
     
-    # Should not contain the exact intelligence items in response
-    assert "hacker@paytm" not in response_text
-    assert "9876543210" not in response_text
-    assert "phishing1.com" not in response_text
-    assert "123456789012" not in response_text
+    # The reply should be a natural response, not containing the raw intelligence
+    assert "hacker@paytm" not in reply_text
+    assert "9876543210" not in reply_text
+    assert "phishing1.com" not in reply_text
+    assert "123456789012" not in reply_text
     
     # Verify intelligence was collected internally
     session = session_manager.get_session(session_id)

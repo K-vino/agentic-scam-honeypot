@@ -82,10 +82,13 @@ async def hackathon_honeypot(
         # Clean up session
         session_manager.delete_session(request.sessionId)
     else:
+        # Generate contextual reply based on message count
+        # Note: message_count includes both scammer and agent messages
+        # Subtract 1 to get count of previous agent responses for reply generation
         reply = reply_generator.generate_reply(
             request.message,
             session.scam_intents,
-            session.message_count - 1  # Exclude current message
+            session.message_count - 1
         )
     
     # Add reply to history
