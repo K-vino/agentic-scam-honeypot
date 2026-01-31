@@ -1,19 +1,21 @@
 # API Key Documentation
 
-## Generated API Key
+## Generate API Key
+
+Run the generator script:
+
+```bash
+python generate_api_key.py
+```
+
+Example output:
 
 ```
 lo3jhse9mf6jqzug76t20x0g522xyxns6y3y
-```
 
-## .env File Storage
-
-```
+# .env file
 API_KEY=lo3jhse9mf6jqzug76t20x0g522xyxns6y3y
-```
 
-## HTTP Request Header
-
-```
+# HTTP request header
 X-API-Key: lo3jhse9mf6jqzug76t20x0g522xyxns6y3y
 ```
