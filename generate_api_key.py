@@ -7,22 +7,25 @@ import string
 
 def generate_api_key(length: int = 36) -> str:
     """
-    Generate a secure random API key.
+    Generate a secure random API key in the format: sk_honeypot_live_xxxxxxxxxxxxxxxxx
     
     Args:
-        length: Length of the API key (32-40 recommended)
+        length: Length of the random suffix (default: 36 characters, making total 53 chars)
     
     Returns:
-        A secure random string containing only lowercase letters and numbers
+        A secure random string with prefix sk_honeypot_live_ followed by random chars
     """
-    # Use only lowercase letters and numbers
+    # Use only lowercase letters and numbers for the random part
     alphabet = string.ascii_lowercase + string.digits
-    # Use secrets.choice for cryptographically strong random selection
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
+    # Generate random suffix
+    random_suffix = ''.join(secrets.choice(alphabet) for _ in range(length))
+    # Combine with prefix to create final key
+    return f"sk_honeypot_live_{random_suffix}"
 
 
 if __name__ == "__main__":
-    # Generate a 36-character API key (within 32-40 range)
+    # Generate API key with 36-character random suffix
+    # Total length will be 53 characters (17 char prefix + 36 random)
     api_key = generate_api_key(36)
     
     print(api_key)

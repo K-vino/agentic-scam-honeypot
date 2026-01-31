@@ -4,38 +4,50 @@ from generate_api_key import generate_api_key
 
 
 def test_api_key_length():
-    """Test that generated API key has correct length"""
+    """Test that generated API key has correct length (prefix + random suffix)"""
+    prefix = "sk_honeypot_live_"
+    
     key = generate_api_key(36)
-    assert len(key) == 36
+    assert len(key) == len(prefix) + 36
+    assert key.startswith(prefix)
     
     # Test with minimum length
     key_min = generate_api_key(32)
-    assert len(key_min) == 32
+    assert len(key_min) == len(prefix) + 32
     
     # Test with maximum length
     key_max = generate_api_key(40)
-    assert len(key_max) == 40
+    assert len(key_max) == len(prefix) + 40
 
 
 def test_api_key_contains_only_lowercase_and_numbers():
-    """Test that API key contains only lowercase letters and numbers"""
+    """Test that API key random suffix contains only lowercase letters and numbers"""
+    prefix = "sk_honeypot_live_"
     allowed_chars = set(string.ascii_lowercase + string.digits)
     
     # Test multiple generations to ensure consistency
     for _ in range(10):
         key = generate_api_key(36)
-        key_chars = set(key)
-        assert key_chars.issubset(allowed_chars), f"Key contains invalid characters: {key_chars - allowed_chars}"
+        assert key.startswith(prefix), f"Key doesn't start with expected prefix: {prefix}"
+        # Check only the random suffix (after the prefix)
+        suffix = key[len(prefix):]
+        suffix_chars = set(suffix)
+        assert suffix_chars.issubset(allowed_chars), f"Suffix contains invalid characters: {suffix_chars - allowed_chars}"
 
 
 def test_api_key_no_special_characters():
-    """Test that API key contains no special characters"""
-    special_chars = set(string.punctuation + string.whitespace)
+    """Test that API key suffix contains no invalid special characters"""
+    prefix = "sk_honeypot_live_"
+    # Underscore is valid in the prefix, so we only check the suffix
+    invalid_chars = set(string.punctuation + string.whitespace) - {'_'}
     
     for _ in range(10):
         key = generate_api_key(36)
-        key_chars = set(key)
-        assert key_chars.isdisjoint(special_chars), f"Key contains special characters: {key_chars & special_chars}"
+        assert key.startswith(prefix), f"Key doesn't start with expected prefix: {prefix}"
+        # Check only the random suffix (after the prefix)
+        suffix = key[len(prefix):]
+        suffix_chars = set(suffix)
+        assert suffix_chars.isdisjoint(invalid_chars), f"Suffix contains invalid special characters: {suffix_chars & invalid_chars}"
 
 
 def test_api_key_no_uppercase():
