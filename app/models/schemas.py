@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime, timezone
 from enum import Enum
 
@@ -22,9 +22,22 @@ class MessageContent(BaseModel):
 class HackathonRequest(BaseModel):
     """Hackathon API request format"""
     sessionId: str = Field(..., description="Unique session identifier")
-    message: MessageContent = Field(..., description="Message object with sender, text, timestamp")
+    message: Union[MessageContent, str] = Field(..., description="Message object with sender, text, timestamp OR plain text string")
     conversationHistory: Optional[List[Dict[str, str]]] = Field(default_factory=list)
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    
+    @field_validator('message', mode='before')
+    @classmethod
+    def validate_message(cls, v):
+        """Convert string message to MessageContent object if needed"""
+        if isinstance(v, str):
+            # Convert plain string to MessageContent object
+            return MessageContent(
+                sender="scammer",
+                text=v,
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+        return v
 
 
 class ScamIntent(str, Enum):

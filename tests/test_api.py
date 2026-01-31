@@ -280,3 +280,51 @@ def test_cleanup_without_api_key():
     response = client.post("/api/v1/cleanup")
     
     assert response.status_code == 401
+
+
+def test_hackathon_endpoint_with_string_message():
+    """Test hackathon endpoint accepts plain string message format"""
+    response = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key},
+        json={
+            "sessionId": "test-string-message",
+            "message": "You won a prize! Send UPI to claim@paytm"
+        }
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Should return only status and reply
+    assert "status" in data
+    assert "reply" in data
+    assert data["status"] == "success"
+    assert isinstance(data["reply"], str)
+    assert len(data["reply"]) > 0
+
+
+def test_hackathon_endpoint_with_object_message():
+    """Test hackathon endpoint accepts object message format"""
+    response = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key},
+        json={
+            "sessionId": "test-object-message",
+            "message": {
+                "sender": "scammer",
+                "text": "URGENT! Your account is suspended",
+                "timestamp": "2026-01-31T08:25:00.000Z"
+            }
+        }
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Should return only status and reply
+    assert "status" in data
+    assert "reply" in data
+    assert data["status"] == "success"
+    assert isinstance(data["reply"], str)
+    assert len(data["reply"]) > 0
