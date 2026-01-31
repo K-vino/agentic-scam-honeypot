@@ -88,7 +88,27 @@ Interactive API documentation is available at:
 
 ### Primary Hackathon Endpoint
 
-**POST /api/honeypot** (For hackathon evaluation)
+**GET/POST /api/honeypot** (For hackathon validation and evaluation)
+
+The endpoint supports both GET and POST methods for compatibility with the GUVI Honeypot Endpoint Tester.
+
+**GET /api/honeypot** (For GUVI tester validation):
+
+```bash
+curl -X GET "http://localhost:8000/api/honeypot" \
+  -H "X-API-Key: your-secret-api-key-here"
+```
+
+Response:
+
+```json
+{
+  "status": "success",
+  "reply": "Honeypot API is active"
+}
+```
+
+**POST /api/honeypot** (For hackathon evaluation):
 
 Send a scam message and receive a human-like reply:
 
@@ -131,11 +151,41 @@ Response for empty body:
 }
 ```
 
+**Why GET and Empty POST Support?**
+
+The `/api/honeypot` endpoint is designed to work seamlessly with the GUVI Honeypot Endpoint Tester:
+
+- **GET requests**: Used by the GUVI tester to verify that the endpoint is active and properly secured with API key authentication. Returns a simple "API is active" message.
+- **Empty POST requests**: The GUVI tester may send POST requests without a body to verify proper endpoint handling. These return a friendly greeting instead of a 422 error.
+- **Full POST requests**: For actual evaluation, the Mock Scammer API sends complete JSON payloads with scam messages, which trigger the full scam detection and engagement logic.
+
+This design ensures the API passes validation checks while maintaining full functionality for real evaluation scenarios.
+
 **Important Notes:**
-- **422 errors are avoided intentionally** for GUVI tester compatibility
+- **405 and 422 errors are avoided intentionally** for GUVI tester compatibility
+- Supports GET, POST, and HEAD methods
 - Empty POST bodies are accepted and return a default greeting
 - **Intelligence and scam detection remain INTERNAL** and are never exposed in the API response
 - When a session completes with detected scam activity, a callback is automatically sent to the hackathon endpoint with extracted intelligence
+
+### How to Use the Honeypot Endpoint Tester
+
+This tool helps participants verify that their Honeypot API endpoint is properly deployed and secured.
+
+**Steps:**
+1. Enter your deployed Honeypot API endpoint URL (e.g., `https://your-app.onrender.com/api/honeypot`)
+2. Provide the required API key in the request header (`X-API-Key: your-secret-api-key`)
+3. Click "Test Honeypot Endpoint" to send the request
+
+**What This Tests:**
+- API authentication using headers
+- Endpoint availability and connectivity
+- Proper request handling (GET, POST, HEAD methods)
+- Response structure and status codes
+- Basic honeypot behavior validation
+
+**Note:**
+This tester is for validation only. The final evaluation uses automated Mock Scammer interactions with full conversation payloads to test the actual scam detection, engagement, and intelligence extraction capabilities.
 
 ### Legacy Testing Endpoint
 

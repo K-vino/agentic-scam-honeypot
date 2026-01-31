@@ -15,21 +15,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["honeypot"])
 
 
-@router.post("/honeypot", response_model=HackathonResponse)
+@router.api_route("/honeypot", methods=["GET", "POST", "HEAD"], response_model=HackathonResponse)
 async def hackathon_honeypot(
+    request_obj: Request,
     api_key: str = Depends(verify_api_key),
     request: Optional[HackathonRequest] = Body(None)
 ) -> HackathonResponse:
     """
     Primary hackathon submission endpoint
     
-    Accepts:
-    - sessionId: Unique session identifier
-    - message: Message content from potential scammer
-    - conversationHistory: Previous conversation (optional)
-    - metadata: Additional metadata (optional)
+    Supports GET, POST, and HEAD methods for GUVI Honeypot Endpoint Tester compatibility.
     
-    Can also accept empty POST body (for GUVI tester compatibility).
+    GET/HEAD behavior:
+    - Returns HTTP 200 with success status and active message
+    - Used by GUVI tester for endpoint validation
+    
+    POST behavior:
+    - Accepts:
+      - sessionId: Unique session identifier
+      - message: Message content from potential scammer
+      - conversationHistory: Previous conversation (optional)
+      - metadata: Additional metadata (optional)
+    - Can also accept empty POST body (for GUVI tester compatibility)
     
     Returns ONLY:
     - status: "success"
@@ -38,6 +45,13 @@ async def hackathon_honeypot(
     Intelligence and scam detection remain INTERNAL.
     Final callback sent automatically when session completes.
     """
+    
+    # Handle GET/HEAD requests (for GUVI tester compatibility)
+    if request_obj.method in ["GET", "HEAD"]:
+        return HackathonResponse(
+            status="success",
+            reply="Honeypot API is active"
+        )
     
     # Handle empty POST body (GUVI tester compatibility)
     if request is None:

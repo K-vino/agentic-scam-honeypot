@@ -207,3 +207,53 @@ def test_honeypot_empty_json_object():
     # Empty JSON object should return 422 (missing required fields)
     # This is expected - we only handle completely empty/null body, not malformed JSON
     assert response.status_code == 422
+
+
+def test_honeypot_get_returns_active_message():
+    """Test that GET /api/honeypot returns success with active message"""
+    response = client.get(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert data["status"] == "success"
+    assert data["reply"] == "Honeypot API is active"
+    assert "scamDetected" not in data
+    assert "confidence" not in data
+
+
+def test_honeypot_get_missing_api_key_returns_401():
+    """Test that GET /api/honeypot without API key returns 401"""
+    response = client.get("/api/honeypot")
+    
+    assert response.status_code == 401
+    data = response.json()
+    assert "detail" in data
+
+
+def test_honeypot_get_invalid_api_key_returns_401():
+    """Test that GET /api/honeypot with invalid API key returns 401"""
+    response = client.get(
+        "/api/honeypot",
+        headers={"X-API-Key": "invalid-wrong-key"}
+    )
+    
+    assert response.status_code == 401
+    data = response.json()
+    assert "detail" in data
+
+
+def test_honeypot_head_request():
+    """Test that HEAD /api/honeypot works correctly"""
+    response = client.head(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key}
+    )
+    
+    # HEAD should return 200 with headers but no body
+    assert response.status_code == 200
+    # HEAD response should have no content
+    assert response.content == b""
