@@ -27,10 +27,33 @@ The API will be available at `http://localhost:8000`
 
 ## Quick Test
 
-### Using cURL
+### Hackathon Endpoint (For Evaluation)
 
 ```bash
-# Test with a scam message
+# Test with a scam message - returns only status and reply
+curl -X POST http://localhost:8000/api/honeypot \
+  -H "X-API-Key: default-api-key-change-me" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "test-001",
+    "message": "Congratulations! You won Rs 50,000. Send UPI to winner@paytm",
+    "conversationHistory": [],
+    "metadata": {}
+  }'
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "reply": "Really? I won something? That's amazing!"
+}
+```
+
+### Legacy Testing Endpoint (For Debugging)
+
+```bash
+# Test with detailed response (includes scam detection data)
 curl -X POST http://localhost:8000/api/v1/message \
   -H "X-API-Key: default-api-key-change-me" \
   -H "Content-Type: application/json" \
@@ -49,7 +72,11 @@ python demo.py
 
 ## Key Endpoints
 
-- `POST /api/v1/message` - Send scam message (requires API key)
+### Hackathon Evaluation
+- `POST /api/honeypot` - Primary submission endpoint (returns only status + reply)
+
+### Legacy/Internal Testing
+- `POST /api/v1/message` - Detailed response with scam detection data
 - `GET /api/v1/health` - Check API health
 - `POST /api/v1/cleanup` - Cleanup expired sessions (requires API key)
 
@@ -57,19 +84,47 @@ python demo.py
 
 ```bash
 # Install test dependencies
-pip install pytest pytest-asyncio
+pip install pytest
 
-# Run all tests
+# Run all tests (51 tests)
 pytest tests/ -v
+
+# Run only integration tests
+pytest tests/test_hackathon_integration.py -v
 
 # Run with coverage
 pytest tests/ --cov=app
 ```
 
-## Features Demonstrated
+## Hackathon Compliance Features
 
-1. **API Key Authentication** - All endpoints protected
-2. **Scam Detection** - Multiple scam types detected:
+1. **Simplified API Response** - Hackathon endpoint returns ONLY:
+   ```json
+   {
+     "status": "success",
+     "reply": "agent response text"
+   }
+   ```
+
+2. **Internal Intelligence Extraction**:
+   - UPI IDs
+   - Phone numbers
+   - URLs/Phishing links
+   - Bank account numbers
+   - Email addresses
+   - Suspicious keywords
+
+3. **Mandatory Final Callback** - Automatically sent to:
+   ```
+   https://hackathon.guvi.in/api/updateHoneyPotFinalResult
+   ```
+   
+   When:
+   - Scam is detected
+   - Minimum engagement threshold met (3+ messages)
+   - Session terminates
+
+4. **Scam Detection** - Multiple scam types detected:
    - Financial fraud
    - Phishing
    - UPI scams
@@ -78,26 +133,15 @@ pytest tests/ --cov=app
    - Romance scams
    - Tech support scams
 
-3. **Intelligence Extraction**:
-   - UPI IDs
-   - Phone numbers
-   - URLs
-   - Bank account numbers
-   - Email addresses
-
-4. **Session Management**:
+5. **Session Management**:
    - In-memory session tracking
    - Automatic expiration
    - Conversation history
 
-5. **Human-like Replies**:
+6. **Human-like Replies**:
    - Context-aware responses
    - Natural engagement
    - Progressive interaction
-
-6. **Callback System**:
-   - Structured data on completion
-   - Configurable webhook URL
 
 ## Configuration Options
 
@@ -109,10 +153,32 @@ API_KEY=your-secret-key
 
 # Session Limits
 MAX_MESSAGES_PER_SESSION=20
+MIN_MESSAGES_FOR_CALLBACK=3
 SESSION_TIMEOUT_SECONDS=3600
 
-# Callback (optional)
-CALLBACK_URL=https://your-webhook-url.com/callback
+# Callback Configuration
+# Note: Callback URL is hardcoded to hackathon endpoint
+CALLBACK_TIMEOUT=10
+```
+
+## Callback Payload Structure
+
+When a session completes with detected scam activity, this payload is sent:
+
+```json
+{
+  "sessionId": "session-123",
+  "scamDetected": true,
+  "totalMessagesExchanged": 15,
+  "extractedIntelligence": {
+    "bankAccounts": ["123456789012"],
+    "upiIds": ["scammer@paytm"],
+    "phishingLinks": ["http://fake-site.com"],
+    "phoneNumbers": ["9876543210"],
+    "suspiciousKeywords": ["urgent", "prize", "won"]
+  },
+  "agentNotes": "Detected fake_prize, upi_scam attempt. Engaged for 15 messages. Extracted 3 intelligence items."
+}
 ```
 
 ## Production Deployment
