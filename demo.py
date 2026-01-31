@@ -21,7 +21,7 @@ HEADERS = {
 }
 
 
-def send_message(session_id: str, message_text: str):
+def send_message(session_id: str, text: str):
     """Send a message to the honeypot API in hackathon format"""
     response = requests.post(
         f"{API_URL}/api/honeypot",
@@ -30,7 +30,7 @@ def send_message(session_id: str, message_text: str):
             "sessionId": session_id,
             "message": {
                 "sender": "scammer",
-                "text": message_text,
+                "text": text,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             },
             "conversationHistory": [],

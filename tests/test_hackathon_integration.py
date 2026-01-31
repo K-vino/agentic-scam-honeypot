@@ -7,18 +7,9 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.config import settings
 from app.services.session_manager import session_manager
-from datetime import datetime, timezone
+from tests.utils.helpers import create_hackathon_message
 
 client = TestClient(app)
-
-
-def create_hackathon_message(text: str):
-    """Helper to create properly formatted hackathon message object"""
-    return {
-        "sender": "scammer",
-        "text": text,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
 
 
 def test_hackathon_complete_flow():
