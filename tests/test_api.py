@@ -26,8 +26,85 @@ def test_health_endpoint():
     assert "active_sessions" in data
 
 
+def test_hackathon_endpoint_without_api_key():
+    """Test hackathon endpoint without API key"""
+    response = client.post(
+        "/api/honeypot",
+        json={
+            "sessionId": "test-session",
+            "message": "Hello"
+        }
+    )
+    
+    assert response.status_code == 401
+
+
+def test_hackathon_endpoint_with_invalid_api_key():
+    """Test hackathon endpoint with invalid API key"""
+    response = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": "invalid-key"},
+        json={
+            "sessionId": "test-session",
+            "message": "Hello"
+        }
+    )
+    
+    assert response.status_code == 401
+
+
+def test_hackathon_endpoint_success():
+    """Test hackathon endpoint with valid API key - returns only status and reply"""
+    response = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key},
+        json={
+            "sessionId": "test-hackathon-session",
+            "message": "You won a prize! Send UPI to claim@paytm",
+            "conversationHistory": [],
+            "metadata": {}
+        }
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Hackathon response should ONLY have status and reply
+    assert "status" in data
+    assert "reply" in data
+    assert data["status"] == "success"
+    assert isinstance(data["reply"], str)
+    
+    # Should NOT contain intelligence or scam detection fields
+    assert "scamDetected" not in data
+    assert "scamIntents" not in data
+    assert "confidence" not in data
+    assert "shouldContinue" not in data
+    assert "extractedIntelligence" not in data
+    assert "sessionId" not in data
+
+
+def test_hackathon_endpoint_scam_message():
+    """Test hackathon endpoint with scam message"""
+    response = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key},
+        json={
+            "sessionId": "test-scam-hackathon",
+            "message": "URGENT! Your bank account has been suspended. Verify your account details immediately"
+        }
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert data["status"] == "success"
+    assert "reply" in data
+    assert len(data["reply"]) > 0
+
+
 def test_message_endpoint_without_api_key():
-    """Test message endpoint without API key"""
+    """Test legacy message endpoint without API key"""
     response = client.post(
         "/api/v1/message",
         json={
@@ -40,7 +117,7 @@ def test_message_endpoint_without_api_key():
 
 
 def test_message_endpoint_with_invalid_api_key():
-    """Test message endpoint with invalid API key"""
+    """Test legacy message endpoint with invalid API key"""
     response = client.post(
         "/api/v1/message",
         headers={"X-API-Key": "invalid-key"},
@@ -54,7 +131,7 @@ def test_message_endpoint_with_invalid_api_key():
 
 
 def test_message_endpoint_success():
-    """Test message endpoint with valid API key"""
+    """Test legacy message endpoint with valid API key"""
     response = client.post(
         "/api/v1/message",
         headers={"X-API-Key": settings.api_key},
@@ -77,7 +154,7 @@ def test_message_endpoint_success():
 
 
 def test_scam_detection_in_api():
-    """Test that scam detection works through API"""
+    """Test that scam detection works through legacy API"""
     response = client.post(
         "/api/v1/message",
         headers={"X-API-Key": settings.api_key},
@@ -96,7 +173,7 @@ def test_scam_detection_in_api():
 
 
 def test_intelligence_extraction_in_api():
-    """Test intelligence extraction through API"""
+    """Test intelligence extraction through legacy API"""
     response = client.post(
         "/api/v1/message",
         headers={"X-API-Key": settings.api_key},
@@ -143,6 +220,41 @@ def test_session_continuation():
     
     assert response2.status_code == 200
     assert response2.json()["sessionId"] == session_id
+
+
+def test_hackathon_session_continuation():
+    """Test hackathon endpoint session continuation"""
+    session_id = "test-hackathon-continuation"
+    
+    # First message
+    response1 = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key},
+        json={
+            "sessionId": session_id,
+            "message": "Hello, you won a prize!"
+        }
+    )
+    
+    assert response1.status_code == 200
+    data1 = response1.json()
+    assert data1["status"] == "success"
+    assert "reply" in data1
+    
+    # Second message
+    response2 = client.post(
+        "/api/honeypot",
+        headers={"X-API-Key": settings.api_key},
+        json={
+            "sessionId": session_id,
+            "message": "Send your UPI ID to claim"
+        }
+    )
+    
+    assert response2.status_code == 200
+    data2 = response2.json()
+    assert data2["status"] == "success"
+    assert "reply" in data2
 
 
 def test_cleanup_endpoint():
